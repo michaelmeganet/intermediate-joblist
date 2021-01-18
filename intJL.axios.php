@@ -89,7 +89,23 @@ switch ($action) {
             //fetch original datas
             $sch_details = get_SchedulingDetailsBySidFromLocal($period, $sid);
             $quo_details = get_QuotationDetailsByQidFromLocal($quono, $qid);
-            $ord_details = get_OrderlistDetailsByJoblistFromLocal($period, $jobcode);
+
+            //fetch orderlist,
+            //to accomodate movement of orderlist, do check between Scheduling period until current period;
+            $objDate = new DateNow();
+            $currentPeriod_int = $objDate->intPeriod();
+            $currentPeriod_str = $objDate->strPeriod();
+
+            $EndYYYYmm = $period;
+            $objPeriodArray = new generatePeriod($currentPeriod_int, $EndYYYYmm);
+            $setofPeriod = array_reverse($objPeriodArray->generatePeriod3()); //the original array goes from current period to last period, reversing it to do closer check
+
+            foreach ($setofPeriod as $checkPeriod) {
+                $ord_details = get_OrderlistDetailsByJoblistFromLocal($checkPeriod, $jobcode);
+                if ($ord_details != 'empty'){
+                    break;
+                }
+            }
             //get PHH Production department admin details
             $phhprod_details = get_PHHPRODADMIN_Detail();
             $objPeriod = new Period();
