@@ -377,6 +377,15 @@
                           this.clearData();
                       }
                     },
+                    "int_data.mdt": function (val){
+                        this.int_data.fdt = val;
+                    },
+                    "int_data.mdw": function (val){
+                        this.int_data.fdw = val;
+                    },
+                    "int_data.mdl": function (val){
+                        this.int_data.fdl = val;
+                    },
                     submit_status: function () {
 
                     }
@@ -452,16 +461,21 @@
                         })
                     },
                     propIntermediateData: function () {
-                        this.int_data.quantity = this.schDetail.quantity;
-                        this.int_data.mdt = this.schDetail.mdt;
-                        this.int_data.mdw = this.schDetail.mdw;
-                        this.int_data.mdl = this.schDetail.mdl;
-                        this.int_data.fdt = this.schDetail.fdt;
-                        this.int_data.fdw = this.schDetail.fdw;
-                        this.int_data.fdl = this.schDetail.fdl;
+                        //this.int_data.quantity = this.schDetail.quantity;
+                        //this.int_data.mdt = this.schDetail.mdt;
+                        //this.int_data.mdw = this.schDetail.mdw;
+                        //this.int_data.mdl = this.schDetail.mdl;
+                        //this.int_data.fdt = this.schDetail.fdt;
+                        //this.int_data.fdw = this.schDetail.fdw;
+                        //this.int_data.fdl = this.schDetail.fdl;
                         this.$refs['intModalButton'].click();
                     },
                     generateIntermediateJL: function () {
+                        if (this.int_data.quantity <= 0){
+                            alert("Quantity cannot be empty!");
+                        }else if(this.int_data.mdt <= 0 || this.int_data.mdw <= 0 || this.int_data.mdl <= 0){
+                            alert("Dimension cannot be empty!");
+                        }else{
                         let qid = this.qid;
                         let intData = this.int_data;
                         let quono = this.quono;
@@ -484,6 +498,7 @@
                                 ijVue.errormsg = rp.data.msg;
                             }
                         });
+                    }
                     },
                     openWindow: function (type) {
                         //"http://10.10.1.2/phhsystem/pstphh/viewprintquotation.php?qno=PRD%202101%20030&dat=2101&com=PST&cid=24669&bid=1&curid=1&byemail=no"
