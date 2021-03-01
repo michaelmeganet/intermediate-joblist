@@ -457,14 +457,14 @@ function generate_orderlistArray($int_array, $ordrunningno, $oriord_dataset, $in
     if ($issue_time > "08:00:00" && $issue_time < "17:00:59") {
         $objCompleteDT = new DateTime($issue_datetime);
         date_add($objCompleteDT, date_interval_create_from_date_string('2 days'));
-        $completion_date = $objCompleteDT->format("d-m-y");
+        $completion_date = $objCompleteDT->format("Y-m-d");
     } else {
         $objIssueDT = new DateTime($issue_datetime);
         date_add($objIssueDT, date_interval_create_from_date_string('1 days'));
         $issue_date = $objIssueDT->format('Y-m-d');
         $objCompleteDT = new DateTime($issue_date);
         date_add($objCompleteDT, date_interval_create_from_date_string('2 days'));
-        $completion_date = $objCompleteDT->format("d-m-y");
+        $completion_date = $objCompleteDT->format("Y-m-d");
     }
 
     $dat = $int_array;
