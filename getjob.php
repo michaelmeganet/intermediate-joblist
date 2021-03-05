@@ -100,6 +100,20 @@ foreach ($result1 as $array){
                 $objdele = new SQL($sqldel);
                 $resultdel = $objdele->getDelete();
                 echo "$resultdel <br>";
+                unset($objdele);
+                unset($resultdel);
+            } elseif (empty($resultoutput1) && empty($resultoutput2)) {
+                
+                echo "2nd rectification of table jobcodesid  found emtpy,<br>"
+                . " and $sqloutput2103 found  empty  with $sqloutput2102 also found empty<br>";
+                $sqldel = "DELETE FROM $pro2103 where sid = $sid2";
+                echo "\$sqldel = $sqldel <br>";
+                $delcount++;
+                $objdele = new SQL($sqldel);
+                $resultdel = $objdele->getDelete();
+                echo "$resultdel <br>";
+                unset($objdele);
+                unset($resultdel);
             }
             
             
