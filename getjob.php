@@ -7,9 +7,64 @@ function updatejobcodesid($jobcode, $period, $sid){
     $sql = "UPDATE jobcodesid SET sid = $sid , period = $period "
             . "WHERE jobcode = '$jobcode' ";
     echo "\$sql = $sql <br>";
-    $objSQL = new SQL($sql);
-    $result = $objSQL->getUpdate();
+//    $objSQL = new SQL($sql);
+//    $result = $objSQL->getUpdate();
+     $result = "not update to jobcodesid where jobcode = $jobcode, period = $period and sid = $sid<br>";
     return $result;
+}
+function checkThenUpdatePeriod($jobcode){
+    
+    $period = substr($jobcod, 7,4);
+    $sql = "select count(*) from jobcodesid where jobcode = '$jobcode'";
+   // echo "\$sql = $sql <br>";
+    $objSQL = new SQL($sql);
+    $result = $objSQL->getRowCount();
+    if(!empty($result)){
+        if($result > 0){
+            $sql2 = "select count(*) from jobcodesid where jobcode = '$jobcode'";
+            $objSQL2 = new SQL($sql2);
+            $resultsql2 = $objSQL2->getResultOneRowArray();
+
+            $period_get = $resultsql2['period'];
+            if($period_get != $period){
+                //echo "\$period_get = $period_get , but \$period = $period <br>";
+                $result = "Update period from $period_get to $period ";
+            }else{
+                //echo "\$period_get = $period_get is the same as \$period = $period <br>";
+                $result = "no update of period";
+            }
+            
+        }elseif ($result ==0) {
+            
+            $result = "no update of period,value is 0";
+            
+        }
+    }
+
+    return $result;
+    
+}
+function checkSBOperation2($jobcode,$sid) {
+    $period = substr($jobcod, 7,4);
+    
+    $sql = "select * from production_scheduling_".$period." where sid = '$sid'";
+    $objSql = new SQL($sql);
+    $result = $objSql->getResultOneRowArray();
+    $jlfor = $result['jlfor'];
+    if($jlfor == 'SB'){
+        if(operation == 2 || operation == 1 || operation == 4){
+            
+            $message = "set operatrion = 3 <br>";
+       
+        }
+    }else if($jlfor == 'CJ'){
+        if(operation == 2 || operation == 3 || operation == 4){
+            $message =  "set operatrion = 1 <br>";
+       
+        }
+    }
+    return $message;
+    
 }
 function insBySqlOutput2102($sql){
     
@@ -76,10 +131,10 @@ function insertToOutput2102($Insert_Array){
             echo "<br><br>\$qrins_debug= $$qrins_debug <br><br>";
             echo "<br>$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$<br>";
             
-            $objSQLlog = new SQLBINDPARAM($qrins, $Insert_Array);
-            $insResult = $objSQLlog->InsertData2();
-            echo "===DEBUG LOG QR = $qrins_debug <br>";
-            echo "+++===LOG RESULT = $insResult<br>";
+//            $objSQLlog = new SQLBINDPARAM($qrins, $Insert_Array);
+//            $insResult = $objSQLlog->InsertData2();
+//            echo "===DEBUG LOG QR = $qrins_debug <br>";
+//            echo "+++===LOG RESULT = $insResult<br>";
             return $insResult;
 }
 
@@ -87,8 +142,9 @@ function deloutput2103($sid2){
     $output2103 = "production_output_2103";
     $sql = "DELETE FROM $output2103 WHERE sid = $sid2 ";
     echo "\$sql = $sql <br>";
-    $objSql = new SQL($sql);
-    $result = $objSql->getDelete();
+//    $objSql = new SQL($sql);
+//    $result = $objSql->getDelete();
+    $result = "not delete from $output2103 where sid = $sid2, for now <br> ";
     return $result;
 }
 
@@ -96,8 +152,9 @@ function delSche2103($sid2){
     $pro2103 = "production_scheduling_2103";
     $sql = "DELETE FROM $pro2103 WHERE sid = $sid2 ";
     echo "\$sql = $sql <br>";
-    $objSql = new SQL($sql);
-    $result = $objSql->getDelete();
+//    $objSql = new SQL($sql);
+//    $result = $objSql->getDelete();
+    $result = "not delete from $pro2103 where sid = $sid2 , fo rnow <br>";
     return $result;
     
 }
@@ -144,8 +201,11 @@ foreach ($result1 as $array){
 
     
     $jobcode = $jlfor." ".$co_code." ".$period." ".$runningno." ".$no;
+    #$checkResult = checkThenUpdatePeriod($jobcode);
+    //echo "The check result of period in $jobcode  = ".$checkResult."<br>";
     $found = $objsqlfind->getResultOneRowArray();
-
+    #$resultSB = checkSBOperation2($jobcode,$sid);
+    //echo "\$resultSB  = $resultSB <br>";
     if(empty($found)){
 //        echo "<br> not found match of $quono, with qid = $qid , runningno = $runningno <br>";
     }else{
@@ -332,7 +392,7 @@ foreach ($result1 as $array){
                                 . "$quantity,$totalquantity,"
                                 . "$remainingquantity)";
                         echo "\$sqlinsert1 = $sqlinsert1 <br>";
-                        //$insertResult = insertToOutput2102($Insert_Array);
+
                         $insertResult = insBySqlOutput2102($sqlinsert1);
                         echo "The insertionresult is $insertResult <br>";
                         
