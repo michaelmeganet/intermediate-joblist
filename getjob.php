@@ -7,8 +7,8 @@ function updatejobcodesid($jobcode, $period, $sid){
     $sql = "UPDATE jobcodesid SET sid = $sid , period = $period "
             . "WHERE jobcode = '$jobcode' ";
     echo "\$sql = $sql <br>";
-//    $objSQL = new SQL($sql);
-//    $result = $objSQL->getUpdate();
+    $objSQL = new SQL($sql);
+    $result = $objSQL->getUpdate();
      $result = "not update to jobcodesid where jobcode = $jobcode, period = $period and sid = $sid<br>";
     return $result;
 }
@@ -131,10 +131,10 @@ function insertToOutput2102($Insert_Array){
             echo "<br><br>\$qrins_debug= $$qrins_debug <br><br>";
             echo "<br>$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$<br>";
             
-//            $objSQLlog = new SQLBINDPARAM($qrins, $Insert_Array);
-//            $insResult = $objSQLlog->InsertData2();
-//            echo "===DEBUG LOG QR = $qrins_debug <br>";
-//            echo "+++===LOG RESULT = $insResult<br>";
+            $objSQLlog = new SQLBINDPARAM($qrins, $Insert_Array);
+            $insResult = $objSQLlog->InsertData2();
+            echo "===DEBUG LOG QR = $qrins_debug <br>";
+            echo "+++===LOG RESULT = $insResult<br>";
             return $insResult;
 }
 
@@ -142,9 +142,9 @@ function deloutput2103($sid2){
     $output2103 = "production_output_2103";
     $sql = "DELETE FROM $output2103 WHERE sid = $sid2 ";
     echo "\$sql = $sql <br>";
-//    $objSql = new SQL($sql);
-//    $result = $objSql->getDelete();
-    $result = "not delete from $output2103 where sid = $sid2, for now <br> ";
+    $objSql = new SQL($sql);
+    $result = $objSql->getDelete();
+    //$result = "not delete from $output2103 where sid = $sid2, for now <br> ";
     return $result;
 }
 
@@ -152,9 +152,9 @@ function delSche2103($sid2){
     $pro2103 = "production_scheduling_2103";
     $sql = "DELETE FROM $pro2103 WHERE sid = $sid2 ";
     echo "\$sql = $sql <br>";
-//    $objSql = new SQL($sql);
-//    $result = $objSql->getDelete();
-    $result = "not delete from $pro2103 where sid = $sid2 , fo rnow <br>";
+    $objSql = new SQL($sql);
+    $result = $objSql->getDelete();
+    //$result = "not delete from $pro2103 where sid = $sid2 , fo rnow <br>";
     return $result;
     
 }
