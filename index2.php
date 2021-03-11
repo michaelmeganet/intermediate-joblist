@@ -19,9 +19,7 @@
                     </div>
                     <div class="col-lg-4 col-md-5 col-sm-6">
                         <div class="sponsor">
-                            <p>
-                                <a href="index-checkdoublerecord-issue.php" target="_blank" >click to check double records in schedule tables</a>
-                            </p>
+                          <!-- <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?serve=CKYIE23N&placement=bootswatchcom" id="_carbonads_js"></script> -->
                         </div>
                     </div>
                 </div>
@@ -379,6 +377,5 @@
         </script>
     </body>
 </html>
-
 
 
