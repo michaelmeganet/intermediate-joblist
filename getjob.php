@@ -198,9 +198,31 @@ foreach ($result1 as $array){
         $no = strval($noposition);
     }
         
-
+    if (intval($runningno) < 1000){
+        
+        if (intval($runningno)< 100){
+            
+            if (intval($runningno)< 10){
+                 $str_runno = "000".strval($runningno);
+            }elseif (intval($runningno)>= 10 && intval($runningno) < 100){
+                $str_runno = "00".strval($runningno);
+            }else{
+                $str_runno = "error";
+            }
+            
+        } elseif (intval($runningno)>= 100 && intval($runningno)<= 999 ) {
+             $str_runno = "0".strval($runningno);
+        }else{
+            
+             $str_runno = "error";
+            
+        }
+       
+    }else{
+        $str_runno = strval($runningno);
+    }
     
-    $jobcode = $jlfor." ".$co_code." ".$period." ".$runningno." ".$no;
+    $jobcode = $jlfor." ".$co_code." ".$period." ".$str_runno." ".$no;
     #$checkResult = checkThenUpdatePeriod($jobcode);
     //echo "The check result of period in $jobcode  = ".$checkResult."<br>";
     $found = $objsqlfind->getResultOneRowArray();
