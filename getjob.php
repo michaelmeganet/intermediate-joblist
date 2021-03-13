@@ -9,7 +9,7 @@ $pro2102 = "production_scheduling_2102";
 $pro2103 = "production_scheduling_2103";
 $output2102 = "production_output_2102";
 $output2103 = "production_output_2103";
-$page = 7;
+$page = 5;
 $limit = 1000;
 $start = ($page - 1) * $limit;
 $sql2102 = "select * from $pro2102 where operation = 1 or  operation = 3 order by quono LIMIT $start,$limit ";
@@ -233,8 +233,22 @@ foreach ($result1 as $array) {
                             $delcount++;
                             if ($delResultSche2103 == 'deleted') {
                                 $duplicate_rectifiedcount++;
+                                $duplicaterecordlist[] = array(
+                                    'quono' => $quono,
+                                    'qid' => $qid,
+                                    'runningno' => $runningno,
+                                    'bid' => $bid,
+                                    'status' => 'success'
+                                );
                             } else {
                                 $duplicate_failcount++;
+                                $duplicaterecordlist[] = array(
+                                    'quono' => $quono,
+                                    'qid' => $qid,
+                                    'runningno' => $runningno,
+                                    'bid' => $bid,
+                                    'status' => 'failed'
+                                );
                             }
                             echo "\$delResultSche2103 = $delResultSche2103 <br>";
                             unset($delResultSche2103);
@@ -316,8 +330,24 @@ foreach ($result1 as $array) {
                                 $delResultSche2103 = delSche2103($sid2);
                                 if ($delResultSche2103 == 'deleted') {
                                     $duplicate_rectifiedcount++;
+
+                                    $duplicaterecordlist[] = array(
+                                        'quono' => $quono,
+                                        'qid' => $qid,
+                                        'runningno' => $runningno,
+                                        'bid' => $bid,
+                                        'status' => 'success'
+                                    );
                                 } else {
                                     $duplicate_failcount++;
+
+                                    $duplicaterecordlist[] = array(
+                                        'quono' => $quono,
+                                        'qid' => $qid,
+                                        'runningno' => $runningno,
+                                        'bid' => $bid,
+                                        'status' => 'failed'
+                                    );
                                 }
                                 echo "Line 345 \$delResultSche2103 = $delResultSche2103 <br>";
                                 unset($delResultSche2103);
@@ -422,7 +452,7 @@ foreach ($result1 as $array) {
                             . " have to be stored in jobcodedsid,<br>  "
                             . "update period column of $jobcode in jobcodesid by \$period = $period "
                             . "<br> and the sid value update by sid, $sid <br> ";
-                            $sqlUpdate = "UPDATE jobcodesid set sid = '$sid' , period = '$period' WHERE jobcode = '$jobcode'";
+                            $sqlUpdate = "UPDATE jobcodesid SET sid = '$sid' , period = '$period' WHERE jobcode = '$jobcode'";
                             echo "<br> \$sqlUpdate = $sqlUpdate <br>";
 
                             $objUpdate = new SQL($sqlUpdate);
@@ -468,29 +498,47 @@ foreach ($result1 as $array) {
                                                     ## if the data is related to the quotation, period sid and noposition
                                                     ## then move the record to poutput2102
                                                     ## else do nothings (because this is not the correct record to be moved
+                                                    $sqlpro2103Record = "SELECT * FROM $pro2103 WHERE sid = '$sid'";
+                                                    $objSQLpro2103record = new SQL($sqlpro2103Record);
+                                                    $pro2103Record = $objSQLpro2103record->getResultOneRowArray();
+                                                    echo "record of sid = $sid in $pro2103 <br>";
+                                                    print_r($pro2103Record);
+                                                    echo "<br>";
+                                                    $tmppro2103_quono = $pro2103Record['quono'];
+                                                    $tmppro2103_runningno = $pro2103Record['runningno'];
+                                                    $tmppro2103_noposition = $pro2103Record['noposition'];
+                                                    $tmppro2103_bid = $pro2103Record['bid'];
+                                                    if ($bid == $tmppro2103_bid &&
+                                                            $noposition == $tmppro2103_noposition &&
+                                                            $runningno == $tmppro2103_runningno &&
+                                                            $quono == $tmppro2103_quono) {
+                                                        //All COMPARISON CHECKS OUT
+                                                        echo "Comparison checks out; Output record related to quono = $quono<br>";
+                                                        echo "move record from  output2103<br>";
+                                                        $sqlinsert2 = "INSERT INTO $output2102 (poid, sid, jobtype,"
+                                                                . " date_start, start_by, machine_id, date_end, "
+                                                                . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
+                                                                . "(NULL, $sid, '$jobtype', '$date_start', "
+                                                                . "'$start_by', '$machine_id', '$date_end', '$end_by', "
+                                                                . "$quantity,$totalquantity,"
+                                                                . "$remainingquantity)";
+                                                        echo "\$sqlinsert2 = $sqlinsert2 <br>";
+                                                        ## $insertResult2 = insBySqlOutput2102($sqlinsert2);
+                                                        ##echo "The insertionresult2 is $insertResult2 <br>";
 
-                                                    echo "move record from  output2103<br>";
-                                                    $sqlinsert2 = "INSERT INTO $output2102 (poid, sid, jobtype,"
-                                                            . " date_start, start_by, machine_id, date_end, "
-                                                            . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
-                                                            . "(NULL, $sid, '$jobtype', '$date_start', "
-                                                            . "'$start_by', '$machine_id', '$date_end', '$end_by', "
-                                                            . "$quantity,$totalquantity,"
-                                                            . "$remainingquantity)";
-                                                    echo "\$sqlinsert2 = $sqlinsert2 <br>";
-                                                    ## $insertResult2 = insBySqlOutput2102($sqlinsert2);
-                                                    ##echo "The insertionresult2 is $insertResult2 <br>";
+                                                        $insertResult = insBySqlOutput2102($sqlinsert1);
+                                                        echo "The insertionresult is $insertResult <br>";
 
-                                                    $insertResult = insBySqlOutput2102($sqlinsert1);
-                                                    echo "The insertionresult is $insertResult <br>";
+                                                        $resultDel1 = deloutput2103($checkSid);
+                                                        echo "\resultDel1 = $resultDel1 <br>";
 
-                                                    $resultDel1 = deloutput2103($checkSid);
-                                                    echo "\resultDel1 = $resultDel1 <br>";
-
-                                                    if ($insertResult == 'insert ok!' && $resultDel1 == 'deleted') {
-                                                        $out2013_rectcount++;
+                                                        if ($insertResult == 'insert ok!' && $resultDel1 == 'deleted') {
+                                                            $out2013_rectcount++;
+                                                        } else {
+                                                            $out2013_failcount++;
+                                                        }
                                                     } else {
-                                                        $out2013_failcount++;
+                                                        echo "Comparison not check out; Output record is unrelated, do nothing;<br>";
                                                     }
                                                 }
                                             } else {
