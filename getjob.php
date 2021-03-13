@@ -9,7 +9,7 @@ $pro2102 = "production_scheduling_2102";
 $pro2103 = "production_scheduling_2103";
 $output2102 = "production_output_2102";
 $output2103 = "production_output_2103";
-$page = 5;
+$page = 4;
 $limit = 1000;
 $start = ($page - 1) * $limit;
 $sql2102 = "select * from $pro2102 where operation = 1 or  operation = 3 order by quono LIMIT $start,$limit ";
@@ -47,6 +47,7 @@ foreach ($result1 as $array) {
     $bid = $array['bid'];
     $sid = $array['sid'];
     $quono = $array['quono'];
+    $quono_issperiod = substr($quono, 4, 4);
     $qid = $array['qid'];
     $runningno = $array['runningno'];
     $noposition = $array['noposition'];
@@ -55,6 +56,10 @@ foreach ($result1 as $array) {
     $year = substr($date_issue, 2, 2);
     $month = substr($date_issue, 5, 2);
     $period = $year . $month; // from table $pro2102 production_scheduling_2102
+    //IF PERIOD IS 2101, MARK IT AS 2102
+    if ($period == '2101') {
+        $period = '2102';
+    }
     $co_code = substr($quono, 0, 3);
     #####################################################
     if ($noposition < 10) {
@@ -65,7 +70,7 @@ foreach ($result1 as $array) {
     $str_runno = convertRunnoToString($runningno);
 
 
-    $jobcode = $jlfor . " " . $co_code . " " . $period . " " . $str_runno . " " . $no;
+    $jobcode = $jlfor . " " . $co_code . " " . $quono_issperiod . " " . $str_runno . " " . $no;
     #########################################################################
     echo "<div class='container border border-warning'>";
     echo " The jobcode is $jobcode <br>";
@@ -397,178 +402,327 @@ foreach ($result1 as $array) {
             echo "Line 538, in \checkSch2103 == $checkSch2103, \$checkSch2102 = $checkSch2102 , not found  and 2103 records but found in  2102<br>";
             echo "<br>^^^^^^^^^Start recitifcation ^^^^^^^^^^^^<br>";
 
-            // check jobcodesid, the period is what
-            $thePeriod = checkJobcodeSidPeriod($jobcode);
-            echo "\$period = $period , \$thePeriod = $thePeriod <br>";
-            $intPeriod = intval($period);
-            $intThePeriod = intval($thePeriod);
-            echo "\$intPeriod = $intPeriod, \$intThePeriod = $intThePeriod <br>";
-            $netPeriod = abs($intThePeriod - $intPeriod);
-            if ($netPeriod == 0) {
-                // both period are the same, do nothing
-                echo "both period \$period and \$thePeriod are the same, do nothing <br>";
-            } elseif ($netPeriod > 0) {
-                // the netPeriod is greater than 0
-                $valuenet = $intThePeriod - $intPeriod;
-                if ($valuenet > 0) {
-                    // $intThePeriod >  $intPeriod
-                    //perod 2103 > 2102 and sche2102 is exist , but 2103 sche2103 not exist
-                    //$thePeriod is the period store in jobcodesid, which link to sid and period of scheduling and output
-                    //$thePeriod is 2013 store in jobcodesid, but sche2013 do notr exist, only schedule 2012 exist
-                    //
+
+            $sqlcheck = "SELECT * FROM jobcodesid WHERE jobcode = '$jobcode' ";
+            $objCheck = new SQL($sqlcheck);
+            $resultCheck = $objCheck->getResultOneRowArray();
+            if (!empty($resultCheck)) {
+                $checkSid = "";
+                $checkSid = $resultCheck['sid'];
+                $checkPeriod = $resultCheck['period'];
+
+                // check jobcodesid, the period is what
+                $thePeriod = checkJobcodeSidPeriod($jobcode);
+                echo "\$period = $period , \$thePeriod = $thePeriod <br>";
+                $intPeriod = intval($period);
+                $intThePeriod = intval($thePeriod);
+                echo "\$intPeriod = $intPeriod, \$intThePeriod = $intThePeriod <br>";
+                $netPeriod = abs($intThePeriod - $intPeriod);
+                if ($netPeriod == 0) {
+                    // both period are the same, do nothing
+                    echo "both period \$period and \$thePeriod are the same, do nothing <br>";
+                } elseif ($netPeriod > 0) {
+                    // the netPeriod is greater than 0
+                    $valuenet = $intThePeriod - $intPeriod;
+                    if ($valuenet > 0) {
+                        // $intThePeriod >  $intPeriod
+                        //perod 2103 > 2102 and sche2102 is exist , but 2103 sche2103 not exist
+                        //$thePeriod is the period store in jobcodesid, which link to sid and period of scheduling and output
+                        //$thePeriod is 2013 store in jobcodesid, but sche2013 do notr exist, only schedule 2012 exist
+                        //
                     
                     //update jobcodesid period = $period
-                    $sqlcheck = "SELECT * FROM jobcodesid WHERE jobcode = '$jobcode' ";
-                    $objCheck = new SQL($sqlcheck);
-                    $resultCheck = $objCheck->getResultOneRowArray();
-                    $checkSid = "";
-                    $checkSid = $resultCheck['sid'];
-                    $checkPeriod = $resultCheck['period'];
-                    if ($checkSid == $sid) {
-                        // $checkSid == $sid
-                        echo "\$checkSid = \$sid , the answer is $sid <br>";
-
-                        if ($checkPeriod == $period) {
-                            // $checkSid == $sid and $checkPeriod == $period
-                            echo "\$checkPeriod = \$period , the answer is $period <br>";
+                        //CHECK IF SID THE SAME OR NOT
+                        if ($checkSid != $sid) { //SID IS NOT THE SAME, MUST FETCH CORRECT SID
+                            echo "<b>SID is not the same, trigger update SID</b><br>";
+                            $jcs_sidUpd = true;
                         } else {
-                            // $checkSid == $sid and $checkPeriod != $period
-                            echo "\$checkPeriod != \$period , the\$checkPeriod = $checkPeriod ,   the \$period is $period <br>";
+                            echo "SID is the same, no need checking<br>";
+                            $jcs_sidUpd = false;
                         }
-                    } else {
-                        // $checkSid != $sid
-                        echo "\$checkSid != \$sid , the\$checkSid = $checkSid ,   the \$sid is $sid <br>";
 
                         if ($checkPeriod == $period) {
-                            // $checkSid != $sid and $checkPeriod == $period
-                            echo "\$checkPeriod = \$period , the answer is $period <br>";
+                            echo "Period is the same, no need checking<br>";
+                            $jcs_periodUpd = false;
                         } else {
-                            // $checkSid != $sid and $checkPeriod != $period
-                            echo "the next step  is to update the jobcodesid with sql query \$sqlUpdate <br> ";
-                            echo "\$checkPeriod != \$period , the\$checkPeriod = $checkPeriod ,   the \$period is $period <br>";
-                            echo "The actual period storing in jobcodesid table is $checkPeriod , "
-                            . "the \$checkPeriod, the period from prod2102 is \$period , $period <br> ";
-                            echo "So $checkPeriod is not the correct period that"
-                            . " have to be stored in jobcodedsid,<br>  "
-                            . "update period column of $jobcode in jobcodesid by \$period = $period "
-                            . "<br> and the sid value update by sid, $sid <br> ";
-                            $sqlUpdate = "UPDATE jobcodesid SET sid = '$sid' , period = '$period' WHERE jobcode = '$jobcode'";
-                            echo "<br> \$sqlUpdate = $sqlUpdate <br>";
+                            echo "<b>Period is not the same, trigger update PERIOD</b><br>";
+                            $jcs_periodUpd = true;
+                        }
 
-                            $objUpdate = new SQL($sqlUpdate);
-                            $resultUpdate = $objUpdate->getUpdate();
-                            echo "update result = $resultUpdate <br>";
-                            $ResultSche2102 = getRecordsetSche2102($quono, $noposition, $runningno, $bid);
-                            $getSche2012_sid = $ResultSche2102['sid'];
-                            $getSche2012_quono = $ResultSche2102['quono'];
-                            $getSche2012_noposition = $ResultSche2102['noposition'];
-                            $getSche2012_bid = $ResultSche2102['bid'];
-                            $getSche2012_runningno = $ResultSche2102['runningno'];
-                            echo "\$getSche2012_sid  = $getSche2012_sid , \$getSche2012_quono =  $getSche2012_quono , "
-                            . "\$getSche2012_noposition = $getSche2012_noposition, \$getSche2012_bid = $getSche2012_bid , "
-                            . "\$getSche2012_runningno = $getSche2012_runningno <br>";
+                        if (!$jcs_sidUpd && !$jcs_periodUpd) {
+                            echo "SID and Period is the same, No need to update jobcodesid<br>";
+                        } else {
+                            $trg = 0;
+                            if ($jcs_sidUpd) {
+                                $jsc_sidQR = "sid = '$sid'";
+                                $trg++;
+                            } else {
+                                $jsc_sidQR = '';
+                            }
+                            if ($jcs_periodUpd) {
+                                $jsc_periodQR = "period = '$period'";
+                                $trg++;
+                            } else {
+                                $jsc_periodQR = "";
+                            }
+                            if ($trg == 1) {
+                                $comma = '';
+                            } else {
+                                $comma = ',';
+                            }
+                            $jscqrupd = "UPDATE jobcodesid SET $jsc_sidQR $comma $jsc_periodQR WHERE jobcode = '$jobcode'";
+                            $objSQLjscupd = new SQL($jscqrupd);
+                            $updResult = $objSQLjscupd->getUpdate();
+                            echo "\$jscqrupd = $jscqrupd<br>";
+                            if ($updResult == 'updated') {
+                                $jcudpatecount++;
+                                echo "JOBCODESID SUCCESS UPDATED<br>";
+                            } else {
+                                echo "JOBCODESID FAIL UPDATED<br>";
+                            }
+                        }
 
-                            if ($sid == $getSche2012_sid) {
-                                // $sid = $getSche2012_sid
-                                echo " Line 643, \$sid = \$getSche2012_sid <br>";
-
-                                if ($quono == $getSche2012_quono) {
-                                    //  $quono = $getSche2012_quono
-                                    echo "Line 647, \$quono = \$getSche2012_quono <br>";
-
-                                    if ($noposition == $getSche2012_noposition) {
-                                        // $noposition = $getSche2012_noposition
-                                        echo "Line 651 , \$noposition =\$getSche2012_noposition <br>";
-                                        if ($bid == $getSche2012_bid) {
-                                            //$bid ==$getSche2012_bid 
-                                            echo "Line 654 , \$bid =\$getSche2012_bid <br>";
-                                            echo "\$runningno = $runningno , \$getSche2012_runningno = $getSche2012_runningno <br>";
-                                            if ($runningno == $getSche2012_runningno) {
-                                                //$runingno == $getSche2012_runningno
-
-                                                echo "$pro2102 data is match with jobcodesid and self check it correct <br>";
-                                                echo "**** No Need do any update on $pro2102<br>";
-                                                $checkOuput2103 = IsExistOutput2103($checkSid);
-                                                if ($checkOuput2103 != "no result on getResultRowArray") {
-                                                    echo "There are no result on Ouput2103, the result is correct.<br>";
-                                                } else {
-                                                    $out2013count++;
-                                                    echo "There are still have result on Ouput2103, the result is in correct.<br>";
-                                                    //check the data is related to out sid and period and quotation no, and noposition
-                                                    ## if the data is related to the quotation, period sid and noposition
-                                                    ## then move the record to poutput2102
-                                                    ## else do nothings (because this is not the correct record to be moved
-                                                    $sqlpro2103Record = "SELECT * FROM $pro2103 WHERE sid = '$sid'";
-                                                    $objSQLpro2103record = new SQL($sqlpro2103Record);
-                                                    $pro2103Record = $objSQLpro2103record->getResultOneRowArray();
-                                                    echo "record of sid = $sid in $pro2103 <br>";
-                                                    print_r($pro2103Record);
-                                                    echo "<br>";
-                                                    $tmppro2103_quono = $pro2103Record['quono'];
-                                                    $tmppro2103_runningno = $pro2103Record['runningno'];
-                                                    $tmppro2103_noposition = $pro2103Record['noposition'];
-                                                    $tmppro2103_bid = $pro2103Record['bid'];
-                                                    if ($bid == $tmppro2103_bid &&
-                                                            $noposition == $tmppro2103_noposition &&
-                                                            $runningno == $tmppro2103_runningno &&
-                                                            $quono == $tmppro2103_quono) {
-                                                        //All COMPARISON CHECKS OUT
-                                                        echo "Comparison checks out; Output record related to quono = $quono<br>";
-                                                        echo "move record from  output2103<br>";
-                                                        $sqlinsert2 = "INSERT INTO $output2102 (poid, sid, jobtype,"
-                                                                . " date_start, start_by, machine_id, date_end, "
-                                                                . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
-                                                                . "(NULL, $sid, '$jobtype', '$date_start', "
-                                                                . "'$start_by', '$machine_id', '$date_end', '$end_by', "
-                                                                . "$quantity,$totalquantity,"
-                                                                . "$remainingquantity)";
-                                                        echo "\$sqlinsert2 = $sqlinsert2 <br>";
-                                                        ## $insertResult2 = insBySqlOutput2102($sqlinsert2);
-                                                        ##echo "The insertionresult2 is $insertResult2 <br>";
-
-                                                        $insertResult = insBySqlOutput2102($sqlinsert1);
-                                                        echo "The insertionresult is $insertResult <br>";
-
-                                                        $resultDel1 = deloutput2103($checkSid);
-                                                        echo "\resultDel1 = $resultDel1 <br>";
-
-                                                        if ($insertResult == 'insert ok!' && $resultDel1 == 'deleted') {
-                                                            $out2013_rectcount++;
-                                                        } else {
-                                                            $out2013_failcount++;
-                                                        }
-                                                    } else {
-                                                        echo "Comparison not check out; Output record is unrelated, do nothing;<br>";
-                                                    }
-                                                }
-                                            } else {
-                                                //$runingno != $getSche2012_runningno
-                                                echo "\$runningno != \$getSche2012_runningno <br> "
-                                                . "Line 664 , \$runningno = $runningno ,\$getSche2012_runningno = $getSche2012_runningno <br> ";
-                                            }
-                                        } else {
-                                            // $bid ! =$getSche2012_bid 
-                                            echo "\$bid ! = \$getSche2012_bid <br>";
+                        //begin checking output data 
+                        echo "BEGIN CHECK FOR OUTPUT DATA<br>";
+                        echo "IF DATA IS ON THE SAME PERIOD AS $period, NO NEED CHECKING, ALREADY CORRECT<br>";
+                        if ($period == $checkPeriod) {
+                            echo "\$checkPeriod [$checkPeriod] is the same as \$period [$period]<br>";
+                            echo "No need for check, already correct<br>";
+                        } else {
+                            echo "\$checkPeriod [$checkPeriod] is not the same as \$period [$period]<br>";
+                            echo "Check for record in 2103 <br>";
+                            echo "<div class='container border border-primary'>";
+                            echo "BEGIN CHECK FOR OUTPUT RECORDS<br>";
+                            //use the checkSID to compare with output sid 
+                            $qrout2103count = "SELECT COUNT(*) FROM $output2103 WHERE sid = $checkSid";
+                            $objSQLout2103count = new SQL($qrout2103count);
+                            $out2103_rcount = $objSQLout2103count->getRowCount();
+                            if ($out2103_rcount > 0) {
+                                //FOUND OUTPUT RECORD LINKED TO THE OLD SID
+                                //CHECK LINK OF DATA
+                                echo 'Found output record linked to ' . $checkSid . '<br>';
+                                echo 'BEGIN CHECK SID LINK TO ' . $pro2103 . '<br>';
+                                $qrSch2103Check = "SELECT * FROM $pro2103 WHERE sid = '$checkSid'";
+                                $objSQLqrsch2103check = new SQL($qrSch2103Check);
+                                $getSch2103dataset = $objSQLqrsch2103check->getResultOneRowArray();
+                                if (empty($getSch2103dataset)) {
+                                    echo "CANNOT FIND ANY RECORD IN $pro2103 WITH SID = $checkSid<br>";
+                                } else {
+                                    echo "FOUND RECORD IN $pro2103 LINKED WITH SID = $checkSid<br>";
+                                    echo "BEGIN CHECK RECORDS<br>";
+                                    $sch2103_quono = $getSch2103dataset['quono'];
+                                    $sch2103_runningno = $getSch2103dataset['runningno'];
+                                    $sch2103_bid = $getSch2103dataset['bid'];
+                                    $sch2103_noposition = $getSch2103dataset['noposition'];
+                                    //BEGIN COMPARING DATA
+                                    if ($quono == $sch2103_quono &&
+                                            $runningno == $sch2103_runningno &&
+                                            $bid == $sch2103_bid &&
+                                            $noposition == $sch2103_noposition) {
+                                        $out2013count++;
+                                        //THIS IS THE EXACT SAME RECORD, COPY OUTPUT DATA INTO 2102
+                                        echo "Comparison checks out; Output record related to quono = $quono<br>";
+                                        echo "move record from  output2103<br>";
+                                        $qrout2103 = "SELECT * FROM $output2103 WHERE sid = $checkSid";
+                                        $objout2103 = new SQL($qrout2103);
+                                        $getout2103dataset = $objout2103->getResultRowArray();
+                                        echo "Processing " . count($getout2103dataset) . " records from $output2103 into $output2102<br>";
+                                        $sqlinsert2 = '';
+                                        foreach ($getout2103dataset as $getout2103datarow) {
+                                            $tmp_sid = $getout2103datarow['sid'];
+                                            $tmp_jobtype = $getout2103datarow['jobtype'];
+                                            $tmp_datestart = $getout2103datarow['date_start'];
+                                            $tmp_startby = $getout2103datarow['start_by'];
+                                            $tmp_machineid = $getout2103datarow['machine_id'];
+                                            $tmp_dateend = $getout2103datarow['date_end'];
+                                            $tmp_endby = $getout2103datarow['end_by'];
+                                            $tmp_quantity = $getout2103datarow['quantity'];
+                                            $tmp_totalquantity = $getout2103datarow['totalquantity'];
+                                            $tmp_remainingquantity = $getout2103datarow['remainingquantity'];
+                                            $sqlinsert2 .= "INSERT INTO $output2102 (poid, sid, jobtype,"
+                                                    . " date_start, start_by, machine_id, date_end, "
+                                                    . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
+                                                    . "(NULL, $tmp_sid, '$tmp_jobtype', '$tmp_datestart', "
+                                                    . "'$tmp_startby', '$tmp_machineid', '$tmp_dateend', '$tmp_endby', "
+                                                    . "$tmp_quantity,$tmp_totalquantity,"
+                                                    . "$tmp_remainingquantity);"
+                                                    . " ";
                                         }
-                                    } else {// end else (if $noposition == $getSche2012_noposition )
-                                        //$noposition != $getSche2012_noposition
-                                        echo "\$noposition !=\ $getSche2012_noposition";
+                                        echo "\$sqlinsert2 = $sqlinsert2 <br>";
+                                        $objsqlinsert2 = new SQL($sqlinsert2);
+                                        $ins2result = $objsqlinsert2->InsertData();
+                                        if ($ins2result == 'insert ok!') {
+                                            $out2013_rectcount++;
+                                            echo "Successfully moved records from $output2103 to $output2102<br>";
+                                            echo "DELETE OLD RECORDS = ";
+                                            $resultDel1 = deloutput2103($checkSid);
+                                            echo "\$resultDel1 = $resultDel1 <br>";
+                                        } else {
+                                            $out2013_failcount++;
+                                        }
+                                    } else {
+                                        echo "COMPARISON NOT CHECKED OUT, THE RECORD NOT CONNECTED TO quono = $quono<br>";
                                     }
-                                } else {//$quono != $getSche2012_quono
-                                    echo "\$quono != \$getSche2012_quono  <br>";
-                                    echo "\$quono = $quono , \$getSche2012_quono =$getSche2012_quono <br>";
                                 }
-                            } else {//$sid != $getSche2012_sid
-                                echo "\$sid != \$getSche2012_sid  <br>";
-                            }//endif $sid == $getSche2012_sid
+                                //fetched data by SID from scheduling_2103
+                                //compare it to the active record
+                            } else {
+                                echo "There's no output record for $checkSid. No need to move record<br>";
+                            }
+
+                            echo "</div>";
                         }
-                    }
+                        /*
+                          if ($checkSid == $sid) {
+                          // $checkSid == $sid
+                          echo "\$checkSid = \$sid , the answer is $sid <br>";
+
+                          if ($checkPeriod == $period) {
+                          // $checkSid == $sid and $checkPeriod == $period
+                          echo "\$checkPeriod = \$period , the answer is $period <br>";
+                          } else {
+                          // $checkSid == $sid and $checkPeriod != $period
+                          echo "\$checkPeriod != \$period , the\$checkPeriod = $checkPeriod ,   the \$period is $period <br>";
+                          }
+                          } else {
+                          // $checkSid != $sid
+                          echo "\$checkSid != \$sid , the\$checkSid = $checkSid ,   the \$sid is $sid <br>";
+
+                          if ($checkPeriod == $period) {
+                          // $checkSid != $sid and $checkPeriod == $period
+                          echo "\$checkPeriod = \$period , the answer is $period <br>";
+                          } else {
+                          // $checkSid != $sid and $checkPeriod != $period
+                          echo "the next step  is to update the jobcodesid with sql query \$sqlUpdate <br> ";
+                          echo "\$checkPeriod != \$period , the\$checkPeriod = $checkPeriod ,   the \$period is $period <br>";
+                          echo "The actual period storing in jobcodesid table is $checkPeriod , "
+                          . "the \$checkPeriod, the period from prod2102 is \$period , $period <br> ";
+                          echo "So $checkPeriod is not the correct period that"
+                          . " have to be stored in jobcodedsid,<br>  "
+                          . "update period column of $jobcode in jobcodesid by \$period = $period "
+                          . "<br> and the sid value update by sid, $sid <br> ";
+                          $sqlUpdate = "UPDATE jobcodesid SET sid = '$sid' , period = '$period' WHERE jobcode = '$jobcode'";
+                          echo "<br> \$sqlUpdate = $sqlUpdate <br>";
+
+                          $objUpdate = new SQL($sqlUpdate);
+                          $resultUpdate = $objUpdate->getUpdate();
+                          echo "update result = $resultUpdate <br>";
+                          $ResultSche2102 = getRecordsetSche2102($quono, $noposition, $runningno, $bid);
+                          $getSche2012_sid = $ResultSche2102['sid'];
+                          $getSche2012_quono = $ResultSche2102['quono'];
+                          $getSche2012_noposition = $ResultSche2102['noposition'];
+                          $getSche2012_bid = $ResultSche2102['bid'];
+                          $getSche2012_runningno = $ResultSche2102['runningno'];
+                          echo "\$getSche2012_sid  = $getSche2012_sid , \$getSche2012_quono =  $getSche2012_quono , "
+                          . "\$getSche2012_noposition = $getSche2012_noposition, \$getSche2012_bid = $getSche2012_bid , "
+                          . "\$getSche2012_runningno = $getSche2012_runningno <br>";
+
+                          if ($sid == $getSche2012_sid) {
+                          // $sid = $getSche2012_sid
+                          echo " Line 643, \$sid = \$getSche2012_sid <br>";
+
+                          if ($quono == $getSche2012_quono) {
+                          //  $quono = $getSche2012_quono
+                          echo "Line 647, \$quono = \$getSche2012_quono <br>";
+
+                          if ($noposition == $getSche2012_noposition) {
+                          // $noposition = $getSche2012_noposition
+                          echo "Line 651 , \$noposition =\$getSche2012_noposition <br>";
+                          if ($bid == $getSche2012_bid) {
+                          //$bid ==$getSche2012_bid
+                          echo "Line 654 , \$bid =\$getSche2012_bid <br>";
+                          echo "\$runningno = $runningno , \$getSche2012_runningno = $getSche2012_runningno <br>";
+                          if ($runningno == $getSche2012_runningno) {
+                          //$runingno == $getSche2012_runningno
+
+                          echo "$pro2102 data is match with jobcodesid and self check it correct <br>";
+                          echo "**** No Need do any update on $pro2102<br>";
+                          $checkOuput2103 = IsExistOutput2103($checkSid);
+                          if ($checkOuput2103 != "no result on getResultRowArray") {
+                          echo "There are no result on Ouput2103, the result is correct.<br>";
+                          } else {
+                          $out2013count++;
+                          echo "There are still have result on Ouput2103, the result is in correct.<br>";
+                          //check the data is related to out sid and period and quotation no, and noposition
+                          ## if the data is related to the quotation, period sid and noposition
+                          ## then move the record to poutput2102
+                          ## else do nothings (because this is not the correct record to be moved
+                          $sqlpro2103Record = "SELECT * FROM $pro2103 WHERE sid = '$sid'";
+                          $objSQLpro2103record = new SQL($sqlpro2103Record);
+                          $pro2103Record = $objSQLpro2103record->getResultOneRowArray();
+                          echo "record of sid = $sid in $pro2103 <br>";
+                          print_r($pro2103Record);
+                          echo "<br>";
+                          $tmppro2103_quono = $pro2103Record['quono'];
+                          $tmppro2103_runningno = $pro2103Record['runningno'];
+                          $tmppro2103_noposition = $pro2103Record['noposition'];
+                          $tmppro2103_bid = $pro2103Record['bid'];
+                          if ($bid == $tmppro2103_bid &&
+                          $noposition == $tmppro2103_noposition &&
+                          $runningno == $tmppro2103_runningno &&
+                          $quono == $tmppro2103_quono) {
+                          //All COMPARISON CHECKS OUT
+                          echo "Comparison checks out; Output record related to quono = $quono<br>";
+                          echo "move record from  output2103<br>";
+                          $sqlinsert2 = "INSERT INTO $output2102 (poid, sid, jobtype,"
+                          . " date_start, start_by, machine_id, date_end, "
+                          . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
+                          . "(NULL, $sid, '$jobtype', '$date_start', "
+                          . "'$start_by', '$machine_id', '$date_end', '$end_by', "
+                          . "$quantity,$totalquantity,"
+                          . "$remainingquantity)";
+                          echo "\$sqlinsert2 = $sqlinsert2 <br>";
+                          ## $insertResult2 = insBySqlOutput2102($sqlinsert2);
+                          ##echo "The insertionresult2 is $insertResult2 <br>";
+
+                          $insertResult = insBySqlOutput2102($sqlinsert1);
+                          echo "The insertionresult is $insertResult <br>";
+
+                          $resultDel1 = deloutput2103($checkSid);
+                          echo "\resultDel1 = $resultDel1 <br>";
+
+                          if ($insertResult == 'insert ok!' && $resultDel1 == 'deleted') {
+                          $out2013_rectcount++;
+                          } else {
+                          $out2013_failcount++;
+                          }
+                          } else {
+                          echo "Comparison not check out; Output record is unrelated, do nothing;<br>";
+                          }
+                          }
+                          } else {
+                          //$runingno != $getSche2012_runningno
+                          echo "\$runningno != \$getSche2012_runningno <br> "
+                          . "Line 664 , \$runningno = $runningno ,\$getSche2012_runningno = $getSche2012_runningno <br> ";
+                          }
+                          } else {
+                          // $bid ! =$getSche2012_bid
+                          echo "\$bid ! = \$getSche2012_bid <br>";
+                          }
+                          } else {// end else (if $noposition == $getSche2012_noposition )
+                          //$noposition != $getSche2012_noposition
+                          echo "\$noposition !=\ $getSche2012_noposition";
+                          }
+                          } else {//$quono != $getSche2012_quono
+                          echo "\$quono != \$getSche2012_quono  <br>";
+                          echo "\$quono = $quono , \$getSche2012_quono =$getSche2012_quono <br>";
+                          }
+                          } else {//$sid != $getSche2012_sid
+                          echo "\$sid != \$getSche2012_sid  <br>";
+                          }//endif $sid == $getSche2012_sid
+                          }
+                          }
+                         * 
+                         */
 //                    echo "period = $period, noposition = $noposition,  runningno = $runningno, bid = $bid <br>";
 //                    $sqlUpdate = "UPDATE jobcodesid set sid = '$sid' , period = '$period' WHERE jobcode = '$jobcode'";
 //                    $objUpdate = new SQL($sqlUpdate);
 //                    $resultUpdate = $objUpdate->getUpdate();
 //                    echo "update result = $resultUpdate <br>";
+                    }
                 }
+            } else {
+                echo "Cannot find jobcode record in jobcodesid. Jobcode not yet scanned.<br>";
             }
             echo "<br>^^^^^^^^End of recitifcation ^^^^^^^<br>";
         }//endif  $checkSch2102 > 0,  
