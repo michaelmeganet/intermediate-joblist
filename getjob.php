@@ -12,8 +12,8 @@ $output2103 = "production_output_2103";
 $page = 4;
 $limit = 1000;
 $start = ($page - 1) * $limit;
-$sql2102 = "select * from $pro2102 where operation = 1 or  operation = 3 order by quono LIMIT $start,$limit ";
-//$sql2102 = "select * from $pro2102 where operation = 1 or  operation = 3 order by quono";
+//$sql2102 = "select * from $pro2102 where operation = 1 or  operation = 3 order by quono LIMIT $start,$limit ";
+$sql2102 = "select * from $pro2102 where operation = 1 or  operation = 3 order by quono";
 $sql2102count = "select COUNT(*) from $pro2102 where operation = 1 or  operation = 3 order by quono ";
 $sql2103 = "select * from $pro2103 where operation = 1 or  operation = 3  order by quon";
 
@@ -39,6 +39,7 @@ $duplicate_failcount = 0;
 $out2013count = 0;
 $out2013_rectcount = 0;
 $out2013_failcount = 0;
+$counter399 = 0;
 foreach ($result1 as $array) {
     echo "<div class='border border-success'>";
     $totalcount++;
@@ -397,7 +398,8 @@ foreach ($result1 as $array) {
             }
             unset($objsqlfind);
         } elseif ($checkSch2103 == 0) { //$checkSch2102 > 0 and $checkSch2103 == 0
-            echo "!!!!!!!! \$checkSch2102 > 0 and \$checkSch2103 == 0 !!!!!!!! (elseif) <br>";
+            $counter399++;
+            echo "!!!!!!!! \Line \$checkSch2103 == 0 !!!!!!!! (elseif) <br>";
             echo "<br>^^^^Case \$checkSch2103 == 0 but ^^^^^\$checkSch2102 = $checkSch2102^^^<br>";
             echo "Line 538, in \checkSch2103 == $checkSch2103, \$checkSch2102 = $checkSch2102 , not found  and 2103 records but found in  2102<br>";
             echo "<br>^^^^^^^^^Start recitifcation ^^^^^^^^^^^^<br>";
@@ -777,7 +779,7 @@ echo "Total Fail Rectify (Duplicate) = $duplicate_failcount<br>";
 echo "Total Wrong Output Insert = $out2013count<br>";
 echo "Total Success Rectify (Output) = $out2013_rectcount<br>";
 echo "Total Fail Rectify (Output) = $out2013_failcount<br>";
-
+echo "Total records fall at Line 399 = $counter399<br>";
 
 echo "total jobcodesid update count is $jcudpatecount <br>";
 
