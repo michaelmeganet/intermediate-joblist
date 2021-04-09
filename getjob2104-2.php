@@ -13,6 +13,7 @@ function  check_jobcodesid($jobcode){
 
 function getJobcodeDetail($jobcode){
     $sql = "SELECT * FROM jobcodesid WHERE jobcode = '$jobcode'";
+    echo "Line 16 , \$sql = $sql <br>";
     $objSql = new SQL($sql);
     $result = $objSql->getResultOneRowArray();
     return $result;
@@ -41,7 +42,7 @@ function check_date_issue_period($date_issue){
 function updatejobcodesid($jobcode, $period, $sid){
     $sql = "UPDATE jobcodesid SET sid = $sid , period = $period "
             . "WHERE jobcode = '$jobcode' ";
-    echo "\$sql = $sql <br>";
+    echo "In Line 44, \$sql = $sql <br>";
     $objSQL = new SQL($sql);
     $result = $objSQL->getUpdate();
     return $result;
@@ -104,13 +105,13 @@ function IsExistOutput2104($sid) {
 
     $output = "production_output_2104";
     $sqloutput = "select * from $output where sid = '$sid'";
-    echo "in function IsExistOutput2104 the sid is $sid <br>";
+    echo "<p style='color:red;background-color:white;'>in function IsExistOutput2104 the sid is $sid <br>";
     echo "\$sqloutput = $sqloutput <br>";
     $objoutput = new SQL($sqloutput);
     $resultoutput = $objoutput->getResultRowArray();
     echo "<br> in IsExistOutput2104, var_dump resultoutput<br> ";
     var_dump($resultoutput);
-    echo "<br>";
+    echo "</p><br>";
     return $resultoutput;
 
 
@@ -150,26 +151,23 @@ function insertToOutput2103($Insert_Array){
 function deloutput2104($sid_nextperiod){
     $output_nextperiod = "production_output_2104";
     $sql = "DELETE FROM $output_nextperiod WHERE sid = $sid_nextperiod ";
+   
     echo "\$sql = $sql <br>";
     $objSql = new SQL($sql);
     $result = $objSql->getDelete();
     return $result;
 }
 
-function delSche2104($sid_nextperiod){
-    $pro2104 = "production_scheduling_2104";
-    $sql = "DELETE FROM $pro2104 WHERE sid = $sid_nextperiod ";
-    echo "\$sql = $sql <br>";
-    $objSql = new SQL($sql);
-    $result = $objSql->getDelete();
-    return $result;
-    
-}
+
+
+
 $pro2103 = "production_scheduling_2103";
 $pro2104 = "production_scheduling_2104";
 $output2103 = "production_output_2103";
 $output2104 = "production_output_2104";
-$sql2103 = "select * from $pro2103 where operation = 1 or  operation = 3 order by sid DESC limit 2000 offset 7000";
+$sql2103 = "select * from $pro2103 where operation = 1 or  operation = 3 order by sid DESC limit 1000";
+//$sql2103 = "select * from $pro2103 where operation = 1 or  operation = 3 order by sid DESC limit 1000 offset 7000";
+//$sql2103 = "select * from $pro2103 where runningno = 2401 and noposition = 8 order by sid DESC";
 $sql2104 = "select * from $pro2104 where operation = 1 or  operation = 3  order by quon";
 
 $objsql2103 = new SQL($sql2103);
@@ -244,15 +242,217 @@ foreach ($result1 as $array){
     $getResultJobcode =  check_jobcodesid($jobcode); 
     echo "<p style='color:red;background-color:white;'>The check_jobcode function "
     . "detect jobcode $jobcode result in answer of $getResultJobcode <br>";
+    #########################################################################
+    $jobcodeResultArray = getJobcodeDetail($jobcode);
+    echo "<p style='color:red;background-color:white;'> List down Jobcodedetails <br>";
+    var_dump($jobcodeResultArray);
+    echo " End of List down Jobcodedetails <br> </p>";
+    
+    ##########################################################################
     $checkIsExistInSche2104 = IsExistScheduling2104($qid, $quono,$noposition, $bid);
     //var_dump($checkIsExistInSche2104);
 
     if (!isset($checkIsExistInSche2104)){
-        echo "<p style='color:orange;background-color:red;'>Not found any data in $pro2104 </p><br> ";
-    }else{
+        echo "<p style='color:orange;background-color:red;'>Not found any data in $pro2104 <br> The getResultJobcode = $getResultJobcode </p><br> ";
+         echo "in Line 253<br>";
+        if($getResultJobcode == 1){//if found data in jobcodsid
+            $resultArray = getJobcodeDetail($jobcode);
+            $jobcode_sid = $resultArray['sid'];
+            $jocode_period = $resultArray['period'];
+            if($jobcode_period != $period){
+                //period in jobcode does not match period in $pro2104
+                // get the $output2104 detial by jobcode_sid ,since it is not = period in 2103, it should be the pointer in $output2104
+                $checkresult = IsExistOutput2104($jobcode_sid);
+                if($checkresult != 'no result on getResultRowArray'){//mean found result in Output2104
+                     
+                    foreach($checkresult as $array){
+                        $poid = '';
+                        $jobtype = $array['jobtype'];
+                        $date_start_str = $array['date_start'];
+
+                        if($date_start_str == '' || !isset($date_start_str) || empty($date_start_str) ){
+                            $date_start = NULL;
+                        }else{
+                            $date_start_value =  strtotime($date_start_str);
+                            $date_start = date('Y-m-d h:i:s', $date_start_value);
+                        }
+
+                        $start_by = $array['start_by'];
+                        $machine_id = $array['machine_id'];
+                        $date_end_str = $array['date_end'];
+
+                        if($date_endt_str == '' || !isset($date_end_str) || empty($date_end_str)  ){
+                            $date_end = NULL;
+                        }else{
+                            $date_end_value =  strtotime($date_end_str);
+                            $date_end = date('Y-m-d h:i:s', $date_end_value);
+                        }
+
+                        $end_by = $array['end_by'];
+                        $quantity = $array['quantity'];
+                        $totalquantity = $array['totalquantity'];
+                        $remainingquantity = $array['remainingquantity'];
+                        echo "jobtype = $jobtype, date_start = $date_start, "
+                                . " start_by = $start_by, machine_id = $machine_id, "
+                                . "date_end = $date_end, end_by  = $end_by , "
+                                . "quantity = $quantity, totalquantity = $totalquantity,remainingquantity = $remainingquantity<br>";                
+
+                       #########################################################
+                       $sqlinsert1 = "INSERT INTO $output2103 (poid, sid, jobtype,"
+                           . " date_start, start_by, machine_id, date_end, "
+                           . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
+                           . "(NULL, $sid, '$jobtype', '$date_start', "
+                           . "'$start_by', '$machine_id', '$date_end', '$end_by', "
+                           . "$quantity,$totalquantity,"
+                           . "$remainingquantity)";
+                       echo "\$sqlinsert1 = $sqlinsert1 <br>";
+                       //$insertResult = insertToOutput2102($Insert_Array);
+                       $insertResult = insBySqlOutput2103($sqlinsert1);
+                       echo "The insertionresult is $insertResult <br>";
+                        $resultUpdate = updatejobcodesid($jobcode,$period, $sid);
+                        $jcudpatecount++;
+                        echo "<p style='color:orange;background-color:red;'>update the jobcodesid table for $joblistno with period = $period and sid = $sid"
+                                . " the result is $resultUpdate <br> </p>";
+                    
+
+                }
+                    unset($checkresult);
+                    unset($poid);
+                    unset($jobtype);
+                    unset($date_start_str);
+                    unset($date_start);
+                    unset($start_by);
+                    unset($machine_id);
+                    unset($date_end_str);
+                    unset($date_end);
+                    unset($end_by);
+                    unset($quantity);
+                    unset($totalquantity);
+                    unset($remainingquantity);
+                    unset($sqlinsert1);
+                    unset($insertResult);
+
+
+                }
+            }
+        }
+    }else{//found record in Sche2104
         echo "in else if Line 214 <br> ";
         if(empty($checkIsExistInSche2104)){
-            echo "<p style='color:orange;background-color:red;'>Not found any data in $pro2104  ,</p><br> ";
+            echo "<p style='color:orange;background-color:red;'>Not found any data in $pro2104  <br> The getResultJobcode = $getResultJobcode</p><br> ";
+            #######################################################################3
+            echo "in Line 336 <br>";
+                    if($getResultJobcode == 1){//if found data in jobcodsid
+                        $resultArray = getJobcodeDetail($jobcode);
+                        $jobcode_sid = $resultArray['sid'];
+                        $jobcode_period = $resultArray['period'];
+                        echo "\$jobcode_period = $jobcode_period ,  \$period =  $period<br>";
+                        if($jobcode_period != $period){
+                            //period in jobcode does not match period in $pro2104
+                            // get the $output2104 detial by jobcode_sid ,since it is not = period in 2103, it should be the pointer in $output2104
+                            $checkresult = IsExistOutput2104($jobcode_sid);
+                            if($checkresult != 'no result on getResultRowArray'){//mean found result in Output2104
+
+                                foreach($checkresult as $array){
+                                    $poid = '';
+                                    $jobtype = $array['jobtype'];
+                                    $date_start_str = $array['date_start'];
+
+                                    if($date_start_str == '' || !isset($date_start_str) || empty($date_start_str) ){
+                                        $date_start = NULL;
+                                    }else{
+                                        $date_start_value =  strtotime($date_start_str);
+                                        $date_start = date('Y-m-d h:i:s', $date_start_value);
+                                    }
+
+                                    $start_by = $array['start_by'];
+                                    $machine_id = $array['machine_id'];
+                                    $date_end_str = $array['date_end'];
+
+                                    if($date_endt_str == '' || !isset($date_end_str) || empty($date_end_str)  ){
+                                        $date_end = NULL;
+                                    }else{
+                                        $date_end_value =  strtotime($date_end_str);
+                                        $date_end = date('Y-m-d h:i:s', $date_end_value);
+                                    }
+
+                                    $end_by = $array['end_by'];
+                                    $quantity = $array['quantity'];
+                                    $totalquantity = $array['totalquantity'];
+                                    $remainingquantity = $array['remainingquantity'];
+                                    echo "<p style='color:red;background-color:white;'>jobtype = $jobtype, date_start = $date_start, "
+                                            . " start_by = $start_by, machine_id = $machine_id, "
+                                            . "date_end = $date_end, end_by  = $end_by , "
+                                            . "quantity = $quantity, totalquantity = $totalquantity,remainingquantity = $remainingquantity<br>";                
+
+                                   #########################################################
+                                   $sqlinsert1 = "INSERT INTO $output2103 (poid, sid, jobtype,"
+                                       . " date_start, start_by, machine_id, date_end, "
+                                       . "end_by, quantity, totalquantity,remainingquantity )  VALUES"
+                                       . "(NULL, $sid, '$jobtype', '$date_start', "
+                                       . "'$start_by', '$machine_id', '$date_end', '$end_by', "
+                                       . "$quantity,$totalquantity,"
+                                       . "$remainingquantity)";
+                                   echo "\$sqlinsert1 = $sqlinsert1 <br>";
+                                   //$insertResult = insertToOutput2102($Insert_Array);
+                                   $insertResult = insBySqlOutput2103($sqlinsert1);
+                                   echo "The insertionresult is $insertResult </p><br>";
+                                   ###################################################
+                                   echo "<p style='color:orange;background-color:red;'>After insert the data rows from $output2104 into $output2103, "
+                                           . "have to remove the data rosw from $output2104 </p>";
+                                    $delResultOutput2104 = deloutput2104($jobcode_sid);
+                            
+                                    if(isset($delResultOutput2104)){
+                                        if($$delResultOutput2104 == "deleted"){
+                                            echo "<p style='color:orange;background-color:red;'>The record in  table $output2104 for sid = $jobcode_sid have been removed <br>";
+                                            $deloutputcount++;
+                                            echo " The record that delete from $output2104  is no. deloutputcount <br> </p> ";
+                                        }
+                                    }
+                                    unset($delResultSche2104);  
+                                    #############################################3
+                                    ## update the period and sid of 2103 in jobcodesid 
+                                    
+                                                                      
+
+                                    $resultUpdate = updatejobcodesid($jobcode,$period, $sid);
+                                    $jcudpatecount++;
+                                    echo "<p style='color:orange;background-color:red;'>update the jobcodesid table for $joblistno with period = $period and sid = $sid"
+                                            . " the result is $resultUpdate <br> </p>";
+
+                            }
+                                unset($checkresult);
+                                unset($poid);
+                                unset($jobtype);
+                                unset($date_start_str);
+                                unset($date_start);
+                                unset($start_by);
+                                unset($machine_id);
+                                unset($date_end_str);
+                                unset($date_end);
+                                unset($end_by);
+                                unset($quantity);
+                                unset($totalquantity);
+                                unset($remainingquantity);
+                                unset($sqlinsert1);
+                                unset($insertResult);
+
+
+                            }else{//$checkresult == 'no result on getResultRowArray'no result of $output2104
+                                //no result on getResultRowArray
+                                //$jobcode_period != $period
+                                //$output2014 no result
+                                $resultUpdate = updatejobcodesid($jobcode,$period, $sid);
+                                $jcudpatecount++;
+                                echo "<p style='color:orange;background-color:red;'>update the jobcodesid table for $joblistno with period = $period and sid = $sid"
+                                        . " the result is $resultUpdate <br> </p>";
+
+                                
+                            }
+                        }
+                    }
+
+            
         }else{
 //        var_dump($checkIsExistInSche2104);
             $sid_nextperiod = $checkIsExistInSche2104['sid'];
