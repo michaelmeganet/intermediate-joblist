@@ -173,12 +173,21 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="modal-footer" v-if='submit_status !== "ok"'>
-                                            <button type="button" class="btn btn-success" @click="generateIntermediateJL()">Submit</button>
-                                            <button type="button" class="btn btn-danger" data-dismiss="modal" >Cancel</button>
-                                        </div>
-                                        <div class="modal-footer" v-else-if='submit_status == "ok"'>                                            
-                                            <button type="button" class="btn btn-danger" data-dismiss="modal" @click='clearData()'>Cancel</button>
+                                        <div class="modal-footer">
+                                            <div class='row'>
+                                                <div class='col-md'>
+                                                    <label class='text-danger' v-html='errormsg'>{{errormsg}}</label>
+                                                </div>
+                                            </div>
+                                            <div class='row'>
+                                                <div class='col-md' v-if='submit_status !== "ok"'>
+                                                    <button type="button" class="btn btn-success" @click="generateIntermediateJL()">Submit</button>
+                                                    <button type="button" class="btn btn-danger" data-dismiss="modal" >Cancel</button>
+                                                </div>
+                                                <div class='col-md'  v-else-if='submit_status == "ok"'>
+                                                    <button type="button" class="btn btn-danger" data-dismiss="modal" @click='clearData()'>Cancel</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -327,203 +336,204 @@
                             </div>
                         </div>
                         <br>
-                        <div class='row'>
-                            <div class='col-md'>
-                                <button type='button' class='btn btn-info btn-block' v-if='schDetail.status != "cancelled"' @click="propIntermediateData();">Generate Intermediate Joblist</button>
-                                <button type='button' class='btn btn-outline-info btn-block' v-else-if='schDetail.status == "cancelled"' disabled>Job is Cancelled</button>
-                            </div>
+                        <div class='col-md'>
+                            <button type='button' class='btn btn-info btn-block' v-if='schDetail.status != "cancelled"' @click="propIntermediateData();">Generate Intermediate Joblist</button>
+                            <button type='button' class='btn btn-outline-info btn-block' v-else-if='schDetail.status == "cancelled"' disabled>Job is Cancelled</button>
                         </div>
                     </div>
+                </div>
 
-                </div> 
-            </section>
+        </div> 
+    </section>
 
 
-        </div>
-        <?php include"footer.php" ?>
-        <script>
-            var ijVue = new Vue({
-                el: '#mainArea',
-                data: {
-                    phpajaxresponsefile: 'intJL.axios.php',
-                    company: 'PST',
-                    jobcode: '',
-                    jobcode_response: '',
-                    jobcode_response_status: '',
-                    parsedJobCode: '',
-                    schDetail: '',
-                    schPeriod: '',
-                    qid: '',
-                    quono: '',
-                    joblist_response: '',
-                    joblist_response_status: '',
-                    int_data: {
-                        quantity: 0,
-                        mdt: 0,
-                        mdw: 0,
-                        mdl: 0,
-                        fdt: 0,
-                        fdw: 0,
-                        fdl: 0
-                    },
-                    submit_status: '',
-                    intermediate_quono: '',
-                    intermediate_period: '',
-                    resultData: '',
-                    errormsg: ''
+</div>
+<?php include"footer.php" ?>
+<script>
+    var ijVue = new Vue({
+        el: '#mainArea',
+        data: {
+            phpajaxresponsefile: 'intJL.axios.php',
+            company: 'PST',
+            jobcode: '',
+            jobcode_response: '',
+            jobcode_response_status: '',
+            parsedJobCode: '',
+            schDetail: '',
+            schPeriod: '',
+            qid: '',
+            quono: '',
+            joblist_response: '',
+            joblist_response_status: '',
+            int_data: {
+                quantity: 0,
+                mdt: 0,
+                mdw: 0,
+                mdl: 0,
+                fdt: 0,
+                fdw: 0,
+                fdl: 0
+            },
+            submit_status: '',
+            intermediate_quono: '',
+            intermediate_period: '',
+            resultData: '',
+            errormsg: ''
 
-                },
-                watch: {
-                    jobcode: function(){
-                      if (this.jobcode.length > 0 && this.jobcode.length < 20)  {
-                          this.clearData();
-                      }
-                    },
-                    "int_data.mdt": function (val){
-                        this.int_data.fdt = val;
-                    },
-                    "int_data.mdw": function (val){
-                        this.int_data.fdw = val;
-                    },
-                    "int_data.mdl": function (val){
-                        this.int_data.fdl = val;
-                    },
-                    submit_status: function () {
-
-                    }
-                },
-                computed: {
-
-                },
-                methods: {
-                    clearData: function () {
-                        this.jobcode_response = '';
-                        this.jobcode_response_status = '';
-                        this.parsedJobCode = '';
-                        this.schDetail = '';
-                        this.schPeriod = '';
-                        this.qid = '';
-                        this.quono = '';
-                        this.joblist_response = '';
-                        this.joblist_response_status = '';
-                        this.int_data = {
-                            quantity: 0,
-                            mdt: 0,
-                            mdw: 0,
-                            mdl: 0,
-                            fdt: 0,
-                            fdw: 0,
-                            fdl: 0
-                        };
-                        this.submit_status = '';
-                        this.intermediate_quono = '';
-                        this.intermediate_period = '';
-                        this.resultData = '';
-                        this.errormsg = '';
-                    },
-                    parseJobCode: function () {
-                        console.log('on parseJobcode...');
-                        let jc = this.jobcode;
-                        axios.post(this.phpajaxresponsefile, {
-                            action: 'parseJobCode',
-                            jobcode: jc
-                        }).then(function (rp) {
-                            console.log(rp.data);
-                            ijVue.jobcode_response_status = rp.data.status;
-                            if (rp.data.status === 'ok') {
-                                ijVue.parsedJobCode = rp.data.msg;
-                                ijVue.jobcode_response = '<font style="color:#37ff00">' + rp.data.msg + '</font>';
-                            } else {
-                                ijVue.jobcode_response = '<font style="color:red">' + rp.data.msg + '</font>'
-                            }
-                            return rp.data.status;
-                        }).then(function (status) {
-                            ijVue.jobcode = '';
-                            if (status === 'ok') {
-                                ijVue.getJoblistDetail(ijVue.parsedJobCode);
-                            }
-                        })
-                    },
-                    getJoblistDetail: function (jobcode) {
-                        console.log('on getJoblistDetal');
-                        axios.post(this.phpajaxresponsefile, {
-                            action: 'getJoblistDetail',
-                            jobcode: jobcode
-                        }).then(function (rp) {
-                            console.log(rp.data);
-                            ijVue.joblist_response_status = rp.data.status;
-                            if (rp.data.status == 'ok') {
-                                ijVue.schDetail = rp.data.schDetail;
-                                ijVue.qid = rp.data.schDetail.qid;
-                                ijVue.quono = rp.data.schDetail.quono;
-                                ijVue.schPeriod = rp.data.schPeriod;
-                            } else {
-                                ijVue.joblist_response = rp.data.msg;
-                            }
-                        })
-                    },
-                    propIntermediateData: function () {
-                        //this.int_data.quantity = this.schDetail.quantity;
-                        //this.int_data.mdt = this.schDetail.mdt;
-                        //this.int_data.mdw = this.schDetail.mdw;
-                        //this.int_data.mdl = this.schDetail.mdl;
-                        //this.int_data.fdt = this.schDetail.fdt;
-                        //this.int_data.fdw = this.schDetail.fdw;
-                        //this.int_data.fdl = this.schDetail.fdl;
-                        this.$refs['intModalButton'].click();
-                    },
-                    generateIntermediateJL: function () {
-                        if (this.int_data.quantity <= 0){
-                            alert("Quantity cannot be empty!");
-                        }else if(this.int_data.mdt <= 0 || this.int_data.mdw <= 0 || this.int_data.mdl <= 0){
-                            alert("Dimension cannot be empty!");
-                        }else{
-                        let qid = this.qid;
-                        let intData = this.int_data;
-                        let quono = this.quono;
-                        axios.post(this.phpajaxresponsefile, {
-                            action: 'generateIntermediateJL',
-                            qid: qid,
-                            quono: quono,
-                            origin_period: this.schPeriod,
-                            jobcode: this.parsedJobCode,
-                            intData: intData
-                        }).then(function (rp) {
-                            console.log('on generateIntermediateJL ...');
-                            console.log(rp.data);
-                            ijVue.submit_status = rp.data.status;
-                            if (rp.data.status == 'ok') {
-                                ijVue.intermediate_quono = rp.data.new_quono;
-                                ijVue.intermediate_period = rp.data.issue_period;
-                                ijVue.resultData = rp.data.ord_data;
-                            } else {
-                                ijVue.errormsg = rp.data.msg;
-                            }
-                        });
-                    }
-                    },
-                    openWindow: function (type) {
-                        //"http://10.10.1.2/phhsystem/pstphh/viewprintquotation.php?qno=PRD%202101%20030&dat=2101&com=PST&cid=24669&bid=1&curid=1&byemail=no"
-                        let quono = encodeURIComponent(this.intermediate_quono);
-                        let dat = encodeURIComponent(this.intermediate_period);
-                        let com = encodeURIComponent(this.company);
-                        let cid = encodeURIComponent(this.resultData.cid);
-                        let bid = encodeURIComponent(this.resultData.bid);
-                        let curid = encodeURIComponent(this.resultData.currency);
-                        switch (type) {
-                            case 'quo':
-                                url = "../../phhsystem/pstphh/viewprintquotation.php?qno=" + quono + "&dat=" + dat + "&com=" + com + "&cid=" + cid + "&bid=" + bid + "&curid=" + curid;
-                                break;
-                            case 'jls' :
-                                url = "../../phhsystem/pstphh/issuejoblistpopup.php?qno=" + quono + "&dat=" + dat + "&com=" + com + "&cid=" + cid + "&bid=" + bid
-                                break;
-                        }
-                        window.open(url, "_blank");
-                    }
+        },
+        watch: {
+            jobcode: function () {
+                if (this.jobcode.length > 0 && this.jobcode.length < 20) {
+                    this.clearData();
                 }
-            })
-        </script>
-    </body>
+            },
+            "int_data.mdt": function (val) {
+                this.int_data.fdt = val;
+            },
+            "int_data.mdw": function (val) {
+                this.int_data.fdw = val;
+            },
+            "int_data.mdl": function (val) {
+                this.int_data.fdl = val;
+            },
+            submit_status: function () {
+
+            }
+        },
+        computed: {
+
+        },
+        methods: {
+            clearData: function () {
+                this.jobcode_response = '';
+                this.jobcode_response_status = '';
+                this.parsedJobCode = '';
+                this.schDetail = '';
+                this.schPeriod = '';
+                this.qid = '';
+                this.quono = '';
+                this.joblist_response = '';
+                this.joblist_response_status = '';
+                this.int_data = {
+                    quantity: 0,
+                    mdt: 0,
+                    mdw: 0,
+                    mdl: 0,
+                    fdt: 0,
+                    fdw: 0,
+                    fdl: 0
+                };
+                this.submit_status = '';
+                this.intermediate_quono = '';
+                this.intermediate_period = '';
+                this.resultData = '';
+                this.errormsg = '';
+            },
+            parseJobCode: function () {
+                console.log('on parseJobcode...');
+                let jc = this.jobcode;
+                axios.post(this.phpajaxresponsefile, {
+                    action: 'parseJobCode',
+                    jobcode: jc
+                }).then(function (rp) {
+                    console.log(rp.data);
+                    ijVue.jobcode_response_status = rp.data.status;
+                    if (rp.data.status === 'ok') {
+                        ijVue.parsedJobCode = rp.data.msg;
+                        ijVue.jobcode_response = '<font style="color:#37ff00">' + rp.data.msg + '</font>';
+                    } else {
+                        ijVue.jobcode_response = '<font style="color:red">' + rp.data.msg + '</font>'
+                    }
+                    return rp.data.status;
+                }).then(function (status) {
+                    ijVue.jobcode = '';
+                    if (status === 'ok') {
+                        ijVue.getJoblistDetail(ijVue.parsedJobCode);
+                    }
+                })
+            },
+            getJoblistDetail: function (jobcode) {
+                console.log('on getJoblistDetal');
+                axios.post(this.phpajaxresponsefile, {
+                    action: 'getJoblistDetail',
+                    jobcode: jobcode
+                }).then(function (rp) {
+                    console.log(rp.data);
+                    ijVue.joblist_response_status = rp.data.status;
+                    if (rp.data.status == 'ok') {
+                        ijVue.schDetail = rp.data.schDetail;
+                        ijVue.qid = rp.data.schDetail.qid;
+                        ijVue.quono = rp.data.schDetail.quono;
+                        ijVue.schPeriod = rp.data.schPeriod;
+                    } else {
+                        ijVue.joblist_response = rp.data.msg;
+                    }
+                })
+            },
+            propIntermediateData: function () {
+                //this.int_data.quantity = this.schDetail.quantity;
+                //this.int_data.mdt = this.schDetail.mdt;
+                //this.int_data.mdw = this.schDetail.mdw;
+                //this.int_data.mdl = this.schDetail.mdl;
+                //this.int_data.fdt = this.schDetail.fdt;
+                //this.int_data.fdw = this.schDetail.fdw;
+                //this.int_data.fdl = this.schDetail.fdl;
+                this.$refs['intModalButton'].click();
+            },
+            generateIntermediateJL: function () {
+                if (this.int_data.quantity <= 0) {
+                    alert("Quantity cannot be empty!");
+                } else if (this.int_data.mdt <= 0 || this.int_data.mdw <= 0 || this.int_data.mdl <= 0) {
+                    alert("Dimension cannot be empty!");
+                } else {
+                    let qid = this.qid;
+                    let intData = this.int_data;
+                    let quono = this.quono;
+                    axios.post(this.phpajaxresponsefile, {
+                        action: 'generateIntermediateJL',
+                        qid: qid,
+                        quono: quono,
+                        origin_period: this.schPeriod,
+                        jobcode: this.parsedJobCode,
+                        intData: intData
+                    }).then(function (rp) {
+                        console.log('on generateIntermediateJL ...');
+                        console.log(rp.data);
+                        ijVue.submit_status = rp.data.status;
+                        if (rp.data.status === 'ok') {
+                            ijVue.intermediate_quono = rp.data.new_quono;
+                            ijVue.intermediate_period = rp.data.issue_period;
+                            ijVue.resultData = rp.data.ord_data;
+                        } else if (rp.data.status === 'error') {
+                            ijVue.errormsg = rp.data.msg;
+                        } else {
+                            ijVue.errormsg = rp.data;
+                        }
+                    });
+                }
+            },
+            openWindow: function (type) {
+                //"http://10.10.1.2/phhsystem/pstphh/viewprintquotation.php?qno=PRD%202101%20030&dat=2101&com=PST&cid=24669&bid=1&curid=1&byemail=no"
+                let quono = encodeURIComponent(this.intermediate_quono);
+                let dat = encodeURIComponent(this.intermediate_period);
+                let com = encodeURIComponent(this.company);
+                let cid = encodeURIComponent(this.resultData.cid);
+                let bid = encodeURIComponent(this.resultData.bid);
+                let curid = encodeURIComponent(this.resultData.currency);
+                switch (type) {
+                    case 'quo':
+                        url = "../../phhsystem/pstphh/viewprintquotation.php?qno=" + quono + "&dat=" + dat + "&com=" + com + "&cid=" + cid + "&bid=" + bid + "&curid=" + curid;
+                        break;
+                    case 'jls' :
+                        url = "../../phhsystem/pstphh/issuejoblistpopup.php?qno=" + quono + "&dat=" + dat + "&com=" + com + "&cid=" + cid + "&bid=" + bid
+                        break;
+                }
+                window.open(url, "_blank");
+            }
+        }
+    })
+</script>
+</body>
 </html>
 
 

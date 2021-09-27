@@ -15,6 +15,7 @@ class Dbh {
 		$this->username = "root";
 		$this->password = "5105458";
 		$this->dbname = "phhsystem";
+//		$this->dbname = "phhsystem_test_13032021";
 		$this->charset = "utf8";
 
 		try {

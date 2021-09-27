@@ -88,8 +88,14 @@ switch ($action) {
             $period = $objJW2->get_period();
             //fetch original datas
             $sch_details = get_SchedulingDetailsBySidFromLocal($period, $sid);
+            if($sch_details === 'empty'){
+                throw new Exception("Cannot find Scheduling details for quono = $quono using sid = $sid!");
+            }
             $quo_details = get_QuotationDetailsByQidFromLocal($quono, $qid);
-
+            if($quo_details === 'empty'){
+                
+                throw new Exception("Cannot find Quotation details for quono = $quono using qid = $qid!");
+            }
             //fetch orderlist,
             //to accomodate movement of orderlist, do check between Scheduling period until current period;
             $objDate = new DateNow();
