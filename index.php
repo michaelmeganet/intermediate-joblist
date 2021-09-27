@@ -173,7 +173,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="modal-footer" v-if='submit_status !== "ok"'>
+                                        <div class="modal-footer">
                                             <div class='row'>
                                                 <div class='col-md'>
                                                     <label class='text-danger' v-html='errormsg'>{{errormsg}}</label>
